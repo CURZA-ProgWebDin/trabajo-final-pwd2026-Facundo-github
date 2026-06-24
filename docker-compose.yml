@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: flask_backend
+    volumes:
+      - .:/app
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_panel
+    ports:
+      - "8080:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
