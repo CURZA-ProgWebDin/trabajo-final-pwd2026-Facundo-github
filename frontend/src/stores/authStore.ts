@@ -3,18 +3,18 @@ import { ref, computed } from 'vue';
 import { authService } from '../services/authService';
 
 export const useAuthStore = defineStore('auth', () => {
-    const token = ref(localStorage.getItem('token') || null);
+    const token = ref<string | null>(localStorage.getItem('token') || null);
     
     const savedUser = localStorage.getItem('user');
-    const user = ref(savedUser && savedUser !== 'undefined' ? JSON.parse(savedUser) : null);
+    const user = ref<any>(savedUser && savedUser !== 'undefined' ? JSON.parse(savedUser) : null);
     
     const loading = ref(false);    
-    const errorMsg = ref(null);
+    const errorMsg = ref<string | null>(null);
     
     const isAuthenticated = computed(() => !!token.value);
     const userRole = computed(() => user.value?.rol || null); 
 
-    async function login(username, password) {
+    async function login(username: any, password: any) {
         loading.value = true;
         errorMsg.value = null;
         try {
@@ -27,7 +27,7 @@ export const useAuthStore = defineStore('auth', () => {
             localStorage.setItem('user', JSON.stringify(userData));
             
             return true;
-        } catch (err) {
+        } catch (err: any) { 
             console.error('Error en Login:', err);
             errorMsg.value = err.response?.data?.mensaje || 'Credenciales Inválidas';
             return false;
