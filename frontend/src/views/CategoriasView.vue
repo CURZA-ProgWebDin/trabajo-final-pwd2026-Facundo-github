@@ -1,37 +1,61 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/authStore';
-import { useRouter } from 'vue-router';
+import { categoriasService } from '../services/categoriasService';
 
 const authStore = useAuthStore();
-const router = useRouter();
 
-const categorias = ref([
-    { id: 1, nombre: 'Fijaciones y Bulonería', descripcion: 'Todo tipo de tornillos, tuercas y arandelas' },
-    { id: 2, nombre: 'Herramientas Manuales', descripcion: 'Pinzas, destornilladores y llaves' },
-    { id: 3, nombre: 'Seguridad Industrial', descripcion: 'Guantes, antiparras y calzado de seguridad' }
-]);
+const categorias = ref([]);
 
 const nuevaCategoria = ref({ nombre: '', descripcion: '' });
 
-const agregarCategoria = () => {
-    if (!nuevaCategoria.value.nombre) return alert('El nombre es obligatorio');
-    const nuevoId = categorias.value.length ? Math.max(...categorias.value.map(c => c.id)) + 1 : 1;
-    categorias.value.push({
-        id: nuevoId,
-        nombre: nuevaCategoria.value.nombre,
-        descripcion: nuevaCategoria.value.descripcion
-    });
-    nuevaCategoria.value = { nombre: '', descripcion: '' };
-    alert('Categoria agregada con éxito');
+const cargarCategorias = async () => {
+    try {
+        const response = await categoriasService.getAll();
+        categorias.value = response.data;
+    } catch (error) {
+        console.error('Error al cargar categorias:', error);
+        alert('No se pudieron obtener las categorias del servidor.');
+    }
 };
 
-const eliminarCategoria = (id) => {
-    if (id === 1) {
-        alert('Error 409 conflict: no se puede eliminar la categoria porque tiene productos asociados. ');
-    } else {
-        categorias.value = categorias.value.filter(c => c.id !== id);
-        alert(`Categoría con ID ${id} eliminada con éxito.`);
+onMounted(() => {
+    cargarCategorias();
+});
+
+const agregarCategoria = async () => {
+    if (!nuevaCategoria.value.nombre) return alert('El nombre es obligatorio');
+    
+    try {
+        await categoriasService.create({
+            nombre: nuevaCategoria.value.nombre,
+            descripcion: nuevaCategoria.value.descripcion
+        });
+        
+        alert('Categoría agregada con éxito');
+        nuevaCategoria.value = { nombre: '', descripcion: '' };
+        await cargarCategorias();
+    } catch (error) {
+        console.error('Error al crear categoría:', error);
+        alert('Hubo un error al intentar guardar la categoría.');
+    }
+};
+
+const eliminarCategoria = async (id) => {
+    if (!confirm('¿Estás seguro de que querés eliminar esta categoría?')) return;
+
+    try {
+        await categoriasService.delete(id);
+        alert(`Categoría eliminada con éxito.`);
+        await cargarCategorias();
+    } catch (error) {
+        console.error('Error al eliminar categoría:', error);
+        
+        if (error.response && error.response.status === 409) {
+            alert('❌ Error 409 Conflict: No se puede eliminar la categoría porque tiene productos asociados en el stock.');
+        } else {
+            alert('Hubo un error al intentar eliminar la categoría.');
+        }
     }
 };
 
