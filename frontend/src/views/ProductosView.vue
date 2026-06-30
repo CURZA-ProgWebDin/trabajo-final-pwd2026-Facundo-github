@@ -18,7 +18,7 @@ const handleLogout = () => {
 };
 
 const eliminarProducto = (id) => {
-    alert('Esta por el eliminar el producto con el ID: ${id}');
+    alert(`Está por eliminar el producto con el ID: ${id}`);
 };
 
 </script>
@@ -38,7 +38,7 @@ const eliminarProducto = (id) => {
         <main class="dashboard-content">
             <div class="section-header">
                 <h2>Panel de Productos</h2>
-                <button class="btn-primary">+ Agregar Producto</button>
+                <button v-if="authStore.useRole === 'admin'" class="btn-primary">+ Agregar Producto</button>
             </div>
 
             <div class="table-container">
@@ -50,7 +50,7 @@ const eliminarProducto = (id) => {
                             <th>Descripción</th>
                             <th>Precio</th>
                             <th>Stock</th>
-                            <th>acciones</th>                            
+                            <th v-if="authStore.useRole === 'admin'">Acciones</th>                                    
                         </tr>
                     </thead>
                     <tbody>
@@ -58,11 +58,13 @@ const eliminarProducto = (id) => {
                             <td>{{ prod.id }}</td>
                             <td><strong>{{ prod.nombre }}</strong></td>
                             <td>{{ prod.descripcion }}</td>
-                            <td>{{ prod.precio }}</td>
+                            <td>${{ prod.precio }}</td>
                             <td>
-                                <span :class="['stock-badge', prod.stock < 20 ? 'stock-low' : 'stock-ok']">{{ prod.stock }} unidades</span>
+                                <span :class="['stock-badge', prod.stock < 20 ? 'stock-low' : 'stock-ok']">
+                                    {{ prod.stock }} unidades {{ prod.stock < 20 ? '— ¡Bajo Stock!' : '' }}
+                                </span>
                             </td>
-                            <td>
+                            <td v-if="authStore.useRole === 'admin'">
                                 <div class="actions-gap">
                                     <button class="btn-action edit">Editar</button>
                                     <button @click="eliminarProducto(prod.id)" class="btn-action delete">Eliminar</button>
@@ -235,6 +237,5 @@ const eliminarProducto = (id) => {
 .btn-action.delete:hover { 
     background-color: #feb2b2;
 }
-
 
 </style>
